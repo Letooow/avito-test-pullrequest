@@ -17,18 +17,19 @@ services:
       retries: 5
 
   migrate:
-    image: migrate/migrate
+    image: migrate/migrate:v4.19.0
     depends_on:
       db:
         condition: service_healthy
     volumes:
-      - ./db/migrations:/migrations:ro
-    command:
-      [
-        "-path=/migrations",
-        "-database=postgres://postgres:postgres@db:5432/postgres?sslmode=disable",
-        "up"
-      ]
+      - ./db/migrations:/migrations
+    command: [
+      "-path", "/migrations",
+      "-database", "postgres://postgres:postgres@db:5432/postgres?sslmode=disable",
+      "up"
+    ]
+    restart: "no"
+
 
   app:
     build: .
@@ -39,6 +40,11 @@ services:
       migrate:
         condition: service_completed_successfully
     environment:
-      DB_DSN: postgres://postgres:postgres@db:5432/postgres?sslmode=disable
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: postgres
+      DB_SSLMODE: disable
     ports:
       - "8080:8080"
